@@ -8,9 +8,13 @@ import sqlite3
 from pygame import mixer
 import webbrowser
 
+
+#finds todays date 
 date_full = str(date.today()).split('-')
 date_name = 'date'+date_full[0]+date_full[1]+date_full[2]
 
+
+# Connect to SQLite database and create a table for tasks for the current date
 conn = sqlite3.connect('todo.db')
 c = conn.cursor()
 c.execute(f'''CREATE TABLE IF NOT EXISTS {date_name}(
@@ -20,32 +24,34 @@ c.execute(f'''CREATE TABLE IF NOT EXISTS {date_name}(
          )''')
 conn.commit()
 
+# initializes variables
 page_time = 0
 number_task = int()
 number = 0
 
-
+# defines the main application window 
 class Root(QMainWindow):
-
+            
+    # initialized the QMainWindow 
     def __init__(self):
         QMainWindow.__init__(self)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-
+# sets window attributes for transparency and framelessness
         self.setWindowFlag(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.show()
-
+#set inital task and timer 
         self.set_task()
-
+        #set up timer to update clock 
         timer = QTimer(self)
         timer.timeout.connect(self.timer)
         timer.start(1000)
-
+#omput for adding a task 
         self.ui.addtask.setPlaceholderText("Add a Task")
         self.ui.addtask_3.setPlaceholderText("Add a Task")
 
-        # set username and profile
+# set username and profile
         self.ui.nameuser.setText(os.getlogin())
         self.ui.profile.setText(str(os.getlogin())[0])
         self.ui.nameuser2.setText(os.getlogin())
@@ -56,7 +62,7 @@ class Root(QMainWindow):
         self.ui.profile2_3.setText(str(os.getlogin())[0])
         self.ui.nameuser5.setText(os.getlogin())
         self.ui.profile5.setText(str(os.getlogin())[0])
-
+# Connect signals to slots 
         self.ui.submit.clicked.connect(self.submit)
         self.ui.submit_2.clicked.connect(self.submit2)
 
@@ -147,6 +153,10 @@ class Root(QMainWindow):
         # link contact
         self.ui.contactme.clicked.connect(self.contact)
 
+
+            
+#handle the window movement when the user clicks and drags the window.
+
     def mousePressEvent(self, evt):
         self.oldPos = evt.globalPos()
 
@@ -156,6 +166,7 @@ class Root(QMainWindow):
         self.move(self.x() + delta.x(), self.y() + delta.y())
         self.oldPos = evt.globalPos()
 
+# Submit task when the user clicks a button, updating the task number and calling add_task method.
     def submit(self):
         global number_task
         text = self.ui.addtask.text()
@@ -166,6 +177,7 @@ class Root(QMainWindow):
             number_task += 1
             self.add_task(number_task, text)
 
+# Similar to submit, but for a different button and input field.
     def submit2(self):
         global number_task
         text = self.ui.addtask_3.text()
@@ -175,7 +187,8 @@ class Root(QMainWindow):
         else:
             number_task += 1
             self.add_task(number_task, text)
-
+                    
+# Adds a new task to the database and calls set_task method to update the UI.
     def add_task(self, num, txt):
         global c
         global conn
@@ -187,6 +200,8 @@ class Root(QMainWindow):
             conn.commit()
         self.set_task()
 
+
+ # Retrieves tasks from the database and updates the UI to display them.
     def set_task(self):
         global number
         global date_name
@@ -257,6 +272,8 @@ class Root(QMainWindow):
                     self.ui.delete8.show()
                     self.ui.timer8.show()
 
+
+# Retrieves completed tasks from the database and updates the UI to display them.
     def set_completed(self):
         global date_name
         count = 0
@@ -290,6 +307,7 @@ class Root(QMainWindow):
                     self.ui.com8.show()
                     self.ui.com8.setText(txt)
 
+ # Removes the first task and updates the UI
     def remove_task1(self):
         global c
         global conn
@@ -378,6 +396,8 @@ class Root(QMainWindow):
         self.remover(number)
         self.set_task()
 
+            
+# Clears and hides task UI elements based on the task number.
     def remover(self, num):
         self.ui.task1.clear()
         self.ui.task2.clear()
@@ -428,6 +448,7 @@ class Root(QMainWindow):
             self.ui.delete1.hide()
             self.ui.timer1.hide()
 
+# Activates the clock page
     def page_clock(self):
         global page_time
         page_time = 1
@@ -436,10 +457,12 @@ class Root(QMainWindow):
         self.ui.mm.setPlaceholderText("00")
         self.ui.ss.setPlaceholderText("00")
 
+# Deactivates the clock page
     def page_clock_cancel(self):
         global page_time
         page_time = 0
-
+                
+# Updates the clock and handles alarms when a specified time is reached
     def timer(self):
         global c
         global conn
@@ -493,6 +516,8 @@ class Root(QMainWindow):
                 c.execute(f'DELETE FROM {date_name+"time"} WHERE time = "{display_text}"')
                 conn.commit()
 
+            
+# Sets a timer for a specified time
     def set_clock(self):
         global c
         global conn
@@ -505,10 +530,12 @@ class Root(QMainWindow):
         new_data = ("""INSERT INTO {}(time) VALUES ('{}');""".format(date_name+'time', clock))
         c.execute(new_data)
         conn.commit()
-
+ 
+# Stops the timer
     def stop_clock(self):
         mixer.music.stop()
-
+                
+# Marks the first task as completed
     def sub_task1(self):
         task = self.ui.task1.text()
         self.sub_tasks(task)
@@ -541,6 +568,8 @@ class Root(QMainWindow):
         task = self.ui.task8.text()
         self.sub_tasks(task)
 
+            
+# Marks a specified task as completed.
     def sub_tasks(self, task):
         global c
         global conn
@@ -553,6 +582,8 @@ class Root(QMainWindow):
         self.remover(number)
         self.set_task()
 
+            
+ # Searches and displays tasks for a specified date in the calendar
     def calender_search(self):
         global c
         global conn
@@ -675,6 +706,7 @@ class Root(QMainWindow):
             self.ui.date_cal.clear()
             self.ui.date_cal.setPlaceholderText("Enter date : 2021/10/12")
 
+# Opens a web page
     def contact(self):
         webbrowser.open('https://bioly.io/AbbasAtaei')
 
